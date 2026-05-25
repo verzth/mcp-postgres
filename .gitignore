@@ -1,0 +1,16 @@
+# Binary (only at root, not cmd/mcp-postgres/ directory)
+/mcp-postgres
+/dist/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Config with secrets
+config.yaml

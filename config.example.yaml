@@ -1,0 +1,97 @@
+# MCP PostgreSQL Server Configuration
+# ===================================
+#
+# Supports two formats:
+# 1. Multi-host (recommended): define named hosts under `hosts:`
+# 2. Single-host (backward compat): use top-level `connection:` + `databases:`
+
+# Default access level for databases not explicitly listed under any host.
+# Options: none, read, write, admin
+defaults:
+  access: read
+
+# Dry-run settings for write operations.
+# All write/DDL queries must go through dry_run -> confirm_execute.
+dry_run:
+  timeout_seconds: 300  # dry-run IDs expire after 5 minutes
+
+# ============================================
+# Option 1: Multi-host config (recommended)
+# ============================================
+# Each host has its own connection and database access overrides.
+# The AI agent will use the `host` parameter in each tool to specify which host.
+# If `host` is omitted: auto-selects if only 1 host, or uses "default".
+#
+# Connection options:
+#   host             - hostname or IP
+#   port             - default 5432
+#   user             - postgres user
+#   password         - postgres password
+#   sslmode          - disable | require | verify-ca | verify-full (default: disable)
+#   default_database - database to connect to for cross-DB discovery (default: postgres)
+#
+# Access levels:
+#   none  - database is completely hidden from the agent
+#   read  - SELECT queries only
+#   write - SELECT + INSERT/UPDATE/DELETE (via dry-run)
+#   admin - all above + DDL (ALTER/CREATE/DROP via dry-run)
+
+hosts:
+  prod-users:
+    connection:
+      host: users-db.internal
+      port: 5432
+      user: readonly
+      password: secret1
+      sslmode: require
+      default_database: postgres
+    databases:
+      users_db:
+        access: write
+        tables:
+          sensitive_users:
+            access: read  # override: read-only for this table
+      audit_log:
+        access: read
+
+  prod-orders:
+    connection:
+      host: orders-db.internal
+      port: 5432
+      user: admin_user
+      password: secret2
+      sslmode: require
+    databases:
+      orders_db:
+        access: admin  # DDL allowed
+      payments_db:
+        access: read
+
+  staging:
+    connection:
+      host: staging-db.internal
+      port: 5432
+      user: dev
+      password: devpass
+    # No database overrides = all databases use defaults.access (read)
+
+# ============================================
+# Option 2: Single-host config (backward compat)
+# ============================================
+# If `hosts` is not defined, use top-level `connection` + `databases`.
+# This is automatically treated as a single host named "default".
+#
+# connection:
+#   host: localhost
+#   port: 5432
+#   user: postgres
+#   password: secret
+#   sslmode: disable
+#
+# databases:
+#   users_db:
+#     access: write
+#   orders_db:
+#     access: admin
+#   internal_db:
+#     access: none
