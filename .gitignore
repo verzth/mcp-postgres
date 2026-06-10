@@ -12,5 +12,7 @@
 .DS_Store
 Thumbs.db
 
-# Config with secrets
+# Config with secrets (local only)
 config.yaml
+*.env
+yggdrasil-wrapper.sh
